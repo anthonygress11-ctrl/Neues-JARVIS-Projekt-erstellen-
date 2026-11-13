@@ -1,0 +1,249 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#030b18">
+<title>JARVIS AI</title>
+
+<style>
+* { box-sizing:border-box; }
+
+body {
+ margin:0;
+ padding:20px;
+ min-height:100vh;
+ background:radial-gradient(circle,#102b49,#030711 75%);
+ color:#65dfff;
+ font-family:Arial,sans-serif;
+ text-align:center;
+}
+
+h1 {
+ letter-spacing:8px;
+ text-shadow:0 0 20px #00aaff;
+}
+
+.status {
+ color:#52ffad;
+ font-size:13px;
+}
+
+.core {
+ width:190px;
+ height:190px;
+ margin:35px auto;
+ border:3px solid #36dfff;
+ border-radius:50%;
+ display:grid;
+ place-items:center;
+ box-shadow:0 0 35px #009dff,inset 0 0 30px #009dff;
+ animation:pulse 3s infinite;
+}
+
+.core span { font-size:65px; }
+
+@keyframes pulse {
+ 50% { transform:scale(1.06);
+ box-shadow:0 0 60px #00bfff; }
+}
+
+button {
+ background:#07365a;
+ color:#70eaff;
+ border:1px solid #20bfff;
+ border-radius:12px;
+ padding:14px;
+ margin:5px;
+ font-size:15px;
+}
+
+input {
+ width:95%;
+ max-width:450px;
+ padding:15px;
+ border:1px solid #22bfff;
+ border-radius:10px;
+ background:#07182b;
+ color:white;
+ font-size:16px;
+}
+
+#chat {
+ max-width:500px;
+ margin:25px auto;
+ padding:15px;
+ min-height:120px;
+ max-height:300px;
+ overflow:auto;
+ background:#07182b;
+ border:1px solid #164a70;
+ border-radius:12px;
+ color:white;
+ text-align:left;
+ overflow-wrap:anywhere;
+}
+
+.card {
+ max-width:500px;
+ margin:20px auto;
+ padding:15px;
+ border:1px solid #164a70;
+ border-radius:12px;
+ background:#07182b;
+}
+</style>
+</head>
+
+<body>
+
+<h1>J.A.R.V.I.S.</h1>
+<p class="status">● SYSTEM ONLINE</p>
+
+<div class="core">
+ <span>◉</span>
+</div>
+
+<h2>Guten Tag!</h2>
+<p>Ihr persönlicher Assistent ist bereit.</p>
+
+<div class="card">
+ <h3 id="clock">00:00:00</h3>
+ <p id="date"></p>
+</div>
+
+<button onclick="listen()">🎙️ SPRECHEN</button>
+<button onclick="say('Alle Systeme sind bereit.')">
+ 🔊 STIMME TESTEN
+</button>
+
+<div style="margin-top:25px">
+ <input id="message"
+ placeholder="Schreibe einen Befehl..."
+ onkeydown="if(event.key==='Enter')send()">
+ <button onclick="send()">Senden</button>
+</div>
+
+<div id="chat">
+ <p>JARVIS: System gestartet. Ich bin bereit.</p>
+</div>
+
+<div class="card">
+ <h3>QUICK ACCESS</h3>
+ <button onclick="window.open('https://google.com','_blank')">Google</button>
+ <button onclick="window.open('https://youtube.com','_blank')">YouTube</button>
+</div>
+
+<script>
+
+const chat = document.getElementById("chat");
+
+function show(who,msg) {
+ const p=document.createElement("p");
+ p.textContent=who+": "+msg;
+ chat.appendChild(p);
+ chat.scrollTop=chat.scrollHeight;
+}
+
+function say(msg) {
+ if(!window.speechSynthesis) return;
+ speechSynthesis.cancel();
+ const s=new SpeechSynthesisUtterance(msg);
+ s.lang="de-DE";
+ s.rate=0.95;
+ s.pitch=0.85;
+ speechSynthesis.speak(s);
+}
+
+function clock() {
+ const now=new Date();
+ document.getElementById("clock").textContent=
+ now.toLocaleTimeString("de-DE");
+ document.getElementById("date").textContent=
+ now.toLocaleDateString("de-DE",
+ {weekday:"long",year:"numeric",month:"long",day:"numeric"});
+}
+clock();
+setInterval(clock,1000);
+
+function answer(text) {
+ const t=text.toLowerCase();
+ let r="Diesen Befehl kenne ich noch nicht.";
+
+ if(t.includes("hallo") || t.includes("guten tag"))
+ r="Guten Tag! Wie kann ich Ihnen helfen?";
+
+ else if(t.includes("wie spät") || t.includes("uhrzeit"))
+ r="Es ist "+new Date().toLocaleTimeString("de-DE");
+
+ else if(t.includes("datum") || t.includes("welcher tag"))
+ r="Heute ist "+new Date().toLocaleDateString("de-DE");
+
+ else if(t.includes("wer bist du"))
+ r="Ich bin JARVIS, Ihr persönlicher digitaler Assistent.";
+
+ else if(t.includes("wie geht es dir"))
+ r="Alle Systeme funktionieren. Danke der Nachfrage.";
+
+ else if(t.includes("hilfe"))
+ r="Sie können mich nach der Uhrzeit, dem Datum oder nach Webseiten fragen.";
+
+ else if(t.includes("youtube"))
+ r="Ich öffne YouTube.";
+ 
+ else if(t.includes("google"))
+ r="Ich öffne Google.";
+
+ else if(t.includes("suche "))
+ {
+   const q=text.substring(text.toLowerCase().indexOf("suche ")+6);
+   window.open("https://www.google.com/search?q="+encodeURIComponent(q),"_blank");
+   r="Ich suche nach "+q;
+ }
+
+ else if(t.includes("witz"))
+ r="Warum können Computer so gut rechnen? Sie verlieren nie den Überblick.";
+
+ show("JARVIS",r);
+ say(r);
+}
+
+function send() {
+ const input=document.getElementById("message");
+ const t=input.value.trim();
+ if(!t)return;
+ show("Du",t);
+ input.value="";
+ answer(t);
+}
+
+function listen() {
+ const Recognition=window.SpeechRecognition ||
+ window.webkitSpeechRecognition;
+
+ if(!Recognition) {
+ show("JARVIS","Spracherkennung wird in diesem Browser nicht unterstützt. Bitte nutze die Texteingabe.");
+ return;
+ }
+
+ const rec=new Recognition();
+ rec.lang="de-DE";
+ rec.continuous=false;
+
+ rec.onresult=e=>{
+ const t=e.results[0][0].transcript;
+ show("Du",t);
+ answer(t);
+ };
+
+ rec.onerror=()=>{
+ show("JARVIS","Mikrofon konnte nicht verwendet werden.");
+ };
+
+ rec.start();
+}
+
+</script>
+</body>
+</html>
